@@ -1,0 +1,34 @@
+﻿<Window x:Class="VendingMachine.AutomatView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:VendingMachine"
+        mc:Ignorable="d"
+        Title="AutomatView" Height="450" Width="800">
+    <UserControl>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <!--Монетоприемник-->
+            <DockPanel Grid.Row="0" Grid.Column="1">
+                <Label DockPanel.Dock="Top" Content="Монетоприемник"/>
+                <!--Кредит-->
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom">
+                    <Button Command="{Binding GetChange}" Margin="5">Вернуть сдачу</Button>
+                    <Label Content="Кредит:"/>
+                    <Label Content="{Binding Credit}"/>
+                </StackPanel>
+                <!--Деньгохранилище-->
+                <ListBox ItemsSource="{Binding AutomataBank}" />
+            </DockPanel>
+            <!--Товары автомата-->
+            <DockPanel Grid.Row="0" Grid.Column="0">
+                <Label DockPanel.Dock="Top" Content="Товары"/>
+                <ListBox ItemsSource="{Binding ProductsInAutomata}"/>
+            </DockPanel>
+        </Grid>
+    </UserControl>
+</Window>
