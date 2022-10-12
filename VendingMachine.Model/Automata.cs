@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Prism.Mvvm;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace VendingMachine.Model
 {
-    public class Automata
+    public class Automata : BindableBase
     {
         public Automata() {
             //деньгохранилище автомата
@@ -24,6 +25,45 @@ namespace VendingMachine.Model
 
         public ReadOnlyObservableCollection<ProductStack> ProductsInAutomata { get; }
         private readonly ObservableCollection<ProductStack> _productsInAutomata;
-        public int Credit { get; set; }
+        
+        private int credit;
+        public int Credit
+        {
+            get { return credit; }
+            set { SetProperty(ref credit, value); }
+        }
+        internal void InsertBanknote(Banknote banknote) {
+            _automataBank.First(ms => ms.Banknote.Equals(banknote)).PushOne();
+            Credit += banknote.Nominal;
+        }
+        internal bool BuyProduct(Product product) {
+            if (Credit >= product.Price
+                && _productsInAutomata.First(p => p.Product.Equals(product)).PullOne()) {
+                Credit -= product.Price;
+                return true;
+            }
+            return false;
+        }
+        internal bool GetChange(out IEnumerable<MoneyStack> change) 
+        {
+            change = new List<MoneyStack>();
+            if (Credit == 0) return false;
+
+            var creditToReturn = Credit;
+            var toReturn = new List<MoneyStack>();
+            foreach (var ms in _automataBank.OrderByDescending(m => m.Banknote.Nominal)) {
+                if (creditToReturn >= ms.Banknote.Nominal) {
+                    toReturn.Add(new MoneyStack(ms.Banknote, creditToReturn / ms.Banknote.Nominal));
+                    creditToReturn -= (creditToReturn / ms.Banknote.Nominal) * ms.Banknote.Nominal;
+                }
+            }
+            if (creditToReturn != 0) return false;
+            foreach (var ms in toReturn)
+                for (int i = 0; i < ms.Amount; ++i)
+                    _automataBank.First(m => Equals(m.Banknote, ms.Banknote)).PullOne();
+            change = toReturn;
+            Credit = 0;
+            return true;
+        }
     }
 }
