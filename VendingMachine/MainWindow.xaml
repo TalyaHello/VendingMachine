@@ -10,7 +10,7 @@
         <!-- Шаблон данных для продуктов в корзине/в наличии -->
         <DataTemplate DataType="{x:Type local:ProductVM}">
             <StackPanel Orientation="Horizontal">
-                <Button Visibility="{Binding IsBuyVisible}" Command="{Binding BuyCommand}">+</Button>
+                <Button Visibility="{Binding IsBuyVisible}" Command="{Binding BuyCommand}" Margin="5">+</Button>
                 <Label Content="{Binding Name}"/>
                 <Label FontWeight="DemiBold" Content="{Binding Price}"/>
                 <Label Content="{Binding Amount}"/>
@@ -19,7 +19,7 @@
         <!-- Шаблон данных для денег в кошельке/деньгохранилище -->
         <DataTemplate DataType="{x:Type local:MoneyVM}">
             <StackPanel Orientation="Horizontal">
-                <Button Visibility="{Binding IsInsertVisible}" Command="{Binding InsertCommand}">+</Button>
+                <Button Visibility="{Binding IsInsertVisible}" Command="{Binding InsertCommand}" Margin="5">+</Button>
                 <Label Content="{Binding Name}"/>
                 <Label Content="{Binding Amount}"/>
             </StackPanel>
@@ -31,7 +31,7 @@
     </Window.DataContext>
     <!-- Грид с двумя колонками, слева интерфейс пользователя, справа - интерфейс автомата (пока пустой)  -->
     <!-- В качестве DataContext и тот и другой будут использовать DataContext этого окна  -->
-    <Grid d:DataContext="{d:DesignInstance {x:Type local:MainViewVM}}">
+    <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
             <ColumnDefinition/>

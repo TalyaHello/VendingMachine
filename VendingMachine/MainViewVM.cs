@@ -15,36 +15,34 @@ namespace VendingMachine
     public class MainViewVM : BindableBase {
         public MainViewVM()
         {
-            _manager = new PurchaseManager();
             _user = _manager.User;
+            _automata = _manager.Automata;
             _user.PropertyChanged += (s, a) => { RaisePropertyChanged(nameof(UserSumm)); };
-            //преобразовать коллекцию в конструкторе 
-            UserWallet = new ObservableCollection<MoneyVM>(_user.UserWallet.Select(ms => new MoneyVM(ms, _manager)));
-            //преобразовывать каждый добавленный или удаленный элемент из модели
-            Watch<MoneyStack, MoneyVM>(_user.UserWallet, UserWallet, uw => uw.MoneyStack);
+            _automata.PropertyChanged += (s, a) => { RaisePropertyChanged(nameof(Credit)); };
+
+            //Кошелек пользователя
+            UserWallet = new ObservableCollection<MoneyVM>(_user.UserWallet.Select(ms => new MoneyVM(ms)));
+            Watch(_user.UserWallet, UserWallet, um => um.MoneyStack);
 
             //покупки пользователя
             UserBuyings = new ObservableCollection<ProductVM>(_user.UserBuyings.Select(ub => new ProductVM(ub)));
-            Watch<ProductStack, ProductVM>(_user.UserBuyings, UserBuyings, ub => ub.ProductStack);
+            Watch(_user.UserBuyings, UserBuyings, ub => ub.ProductStack);
 
-            _automata = _manager.Automata;
-            _automata.PropertyChanged += (s, a) => { RaisePropertyChanged(nameof(Credit)); };
             //деньги автомата
-            AutomataBank = new ObservableCollection<MoneyVM>(_automata.AutomataBank.Select(a => new MoneyVM(a)));
-            Watch<MoneyStack, MoneyVM>(_automata.AutomataBank, AutomataBank, a => a.MoneyStack);
+            AutomataBank = new ObservableCollection<MoneyVM>(_automata.AutomataBank.Select(a => new MoneyVM(a, _manager)));
+            Watch(_automata.AutomataBank, AutomataBank, a => a.MoneyStack);
             //товары автомата
             ProductsInAutomata = new ObservableCollection<ProductVM>(_automata.ProductsInAutomata.Select(ap => new ProductVM(ap, _manager)));
-            Watch<ProductStack, ProductVM>(_automata.ProductsInAutomata, ProductsInAutomata, p => p.ProductStack);
-            GetChange = new DelegateCommand(() => {
-                _manager.GetChange();
-            });
+            Watch(_automata.ProductsInAutomata, ProductsInAutomata, p => p.ProductStack);
+
+            GetChange = new DelegateCommand(() => _manager.GetChange());
         }
-        private PurchaseManager _manager;
+        private PurchaseManager _manager = new PurchaseManager();
         public int UserSumm => _user.UserSumm;
         public ObservableCollection<MoneyVM> UserWallet { get; }
         public ObservableCollection<ProductVM> UserBuyings { get; }
         public DelegateCommand GetChange { get; }
-        public int Credit { get; }
+        public int Credit => _automata.Credit;
         public ObservableCollection<MoneyVM> AutomataBank { get; }
         public ObservableCollection<ProductVM> ProductsInAutomata { get; }
 
@@ -55,8 +53,9 @@ namespace VendingMachine
                                          ObservableCollection<T2> collToUpdate, 
                                          Func<T2, object> modelProperty)
         {
-            ((INotifyCollectionChanged)collToWatch).CollectionChanged += (s, a) => {
-                if (a.NewItems?.Count == 1) collToUpdate.Add((T2)Activator.CreateInstance(typeof(T2), (T)a.NewItems[0]));
+            ((INotifyCollectionChanged)collToWatch).CollectionChanged += (s, a) => 
+            {
+                if (a.NewItems?.Count == 1) collToUpdate.Add((T2) Activator.CreateInstance(typeof(T2), (T)a.NewItems[0], null));
                 if (a.OldItems?.Count == 1) collToUpdate.Remove(collToUpdate.First(mv => modelProperty(mv) == a.OldItems[0]));
             };
         }
@@ -76,7 +75,6 @@ namespace VendingMachine
         public DelegateCommand BuyCommand { get; }
         public string Name => ProductStack.Product.Name;
         public string Price => $"({ProductStack.Product.Price} rub.)";
-        public Visibility IsAmountVisible => BuyCommand == null ? Visibility.Collapsed : Visibility.Visible;
         public int Amount => ProductStack.Amount;
     }
     public class MoneyVM : BindableBase {

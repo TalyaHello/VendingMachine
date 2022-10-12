@@ -17,7 +17,7 @@ namespace VendingMachine
     /// <summary>
     /// Логика взаимодействия для AutomatView.xaml
     /// </summary>
-    public partial class AutomatView : Window
+    public partial class AutomatView : UserControl
     {
         public AutomatView()
         {
